@@ -340,7 +340,7 @@ userRoutes.get("/:userId/transactions/:id", (req: Request, res: Response) => {
                 message: "Transaction not found"
             })
         }
-        
+
         return res.status(200).send(transaction);
 
     } catch (error: any) {
@@ -350,4 +350,54 @@ userRoutes.get("/:userId/transactions/:id", (req: Request, res: Response) => {
             error: error.toString(),
         })
     }
-})
+});
+
+userRoutes.get("/:userId/transactions", (req: Request, res: Response) => {
+    try {
+        const { userId } = req.params;
+
+        let user = usersList.find((user) => user.id === userId);
+
+        if(!user) {
+            return res.status(404).send({
+                ok: false,
+                message: "User not found"
+            })
+        };
+
+        let somaIncomes = 0;
+        let somaOutcomes = 0;
+
+        for(let transaction of user.transactions) {
+
+            if(transaction.type === "income") {
+                somaIncomes = somaIncomes + transaction.value;
+            };
+
+            if(transaction.type === "outcome") {
+                somaOutcomes = somaOutcomes + transaction.value;
+            };
+        };
+
+        let totalCredito = somaIncomes - somaOutcomes;
+
+
+        return res.status(200).send({
+            transactions: [user.transactions],
+            balance: {
+                incomes: somaIncomes,
+                outcomes: somaOutcomes,
+                credito: totalCredito
+            }
+        });
+
+    } catch (error: any) {
+            return res.status(500).send({
+            ok: false,
+            message: "Erro no servidor",
+            error: error.toString(),
+        })
+    }
+});
+
+
