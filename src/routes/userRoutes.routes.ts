@@ -355,6 +355,7 @@ userRoutes.get("/:userId/transactions/:id", (req: Request, res: Response) => {
 userRoutes.get("/:userId/transactions", (req: Request, res: Response) => {
     try {
         const { userId } = req.params;
+        const { title, type } = req.query;
 
         let user = usersList.find((user) => user.id === userId);
 
@@ -382,14 +383,38 @@ userRoutes.get("/:userId/transactions", (req: Request, res: Response) => {
         let totalCredito = somaIncomes - somaOutcomes;
 
 
-        return res.status(200).send({
-            transactions: [user.transactions],
-            balance: {
-                incomes: somaIncomes,
-                outcomes: somaOutcomes,
-                credito: totalCredito
-            }
-        });
+        if(!title && !type) {
+            return res.status(200).send({
+                transactions: [user.transactions],
+                balance: {
+                    incomes: somaIncomes,
+                    outcomes: somaOutcomes,
+                    credito: totalCredito
+                }
+            });
+        };
+
+        let transactionTitle = user.transactions.filter((transaction) => transaction.title === title);
+        let transactionType = user.transactions.filter((transaction) => transaction.type === type);
+
+        if(!transactionTitle && !transactionType) {
+            return res.status(404).send({
+                ok: false,
+                message: "Transaction not found"
+            })
+        }; 
+
+        if(title) {
+            return res.status(200).send({
+                transactions: [transactionTitle]
+            })
+        };
+
+        if(type) {
+            return res.status(200).send({
+                transactions: [transactionType]
+            })
+        };
 
     } catch (error: any) {
             return res.status(500).send({
