@@ -417,12 +417,51 @@ userRoutes.get("/:userId/transactions", (req: Request, res: Response) => {
         };
 
     } catch (error: any) {
-            return res.status(500).send({
+        return res.status(500).send({
             ok: false,
             message: "Erro no servidor",
             error: error.toString(),
         })
     }
 });
+
+userRoutes.delete("/:userId/transactions/:id", (req: Request, res: Response) => {
+    try {
+        const { userId, id } = req.params;
+
+        let user = usersList.find((user) => user.id === userId);
+
+        if(!user) {
+            return res.status(404).send({
+                ok: false,
+                message: "User not found"
+            })
+        };
+
+        let transactionIndex = user.transactions.findIndex((transaction) => transaction.id === id);
+
+        if(transactionIndex < 0){
+            return res.status(404).send({
+                ok: false,
+                message: "Transaction not found"
+            })
+        };
+
+        user.transactions.splice(transactionIndex, 1);
+
+        return res.status(200).send({
+            ok: true,
+            message: "Transaction succesfully deleted",
+            data: user.transactions
+        });
+
+    } catch (error: any) {
+        return res.status(500).send({
+            ok: false,
+            message: "Erro no servidor",
+            error: error.toString(),
+        })
+    }
+})
 
 
