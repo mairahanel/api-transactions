@@ -462,6 +462,73 @@ userRoutes.delete("/:userId/transactions/:id", (req: Request, res: Response) => 
             error: error.toString(),
         })
     }
-})
+});
 
+userRoutes.put("/:userId/transactions/:id", (req:Request, res: Response) => {
+    try {
+        const { userId, id } = req.params;
+        const { title, value, type } = req.body;
 
+        let user = usersList.find((user) => user.id === userId);
+
+        if(!user) {
+            return res.status(404).send({
+                ok: false,
+                message: "User not found"
+            })
+        };
+
+        let transaction = user.transactions.find((transaction) => transaction.id === id);
+
+        if(!transaction) {
+            return res.status(404).send({
+                ok: false,
+                message: "Transaction not found"
+            })
+        };
+
+        if(!title) {
+            return res.status(400).send({
+                ok: false,
+                message: "Title not provided"
+            })
+        };
+
+        if(!type) {
+            return res.status(400).send({
+                ok: false,
+                message: "Type not provided"
+            })
+        };
+
+        if(!value) {
+            return res.status(400).send({
+                ok: false,
+                message: "Value not provided"
+            })
+        };
+
+        transaction.title = title;
+        transaction.type = type;
+        transaction.value = value;
+
+        return res.status(201).send({
+            ok: true,
+            message: "Transaction succesfully edited",
+            data: user.transactions
+        });
+
+    } catch (error: any) {
+        return res.status(500).send({
+            ok: false,
+            message: "Erro no servidor",
+            error: error.toString(),
+        })
+    }
+});
+
+//FALTA:
+
+//1. Fazer validação de CPF por middleware;
+//2. Fazer validação de todas as rotas de transactions por middleware;
+//3. Separar código em controllers
