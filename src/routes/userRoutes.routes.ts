@@ -1,12 +1,13 @@
 import { Request, Response, Router } from "express";
 import { usersList } from "../data/usersList";
+import { cpfExistsMiddleware } from "../middlewares/cpf-exists.middleware";
 import { Transaction } from "../models/transaction";
 import { User } from "../models/user";
 
 export const userRoutes = Router();
 
 //Usuários 
-userRoutes.post("/", (req: Request, res: Response) => {
+userRoutes.post("/", [cpfExistsMiddleware], (req: Request, res: Response) => {
 
     try {
         const { name, cpf, email, age } = req.body;
@@ -16,36 +17,28 @@ userRoutes.post("/", (req: Request, res: Response) => {
                 ok: false,
                 message: "Name not provided"
             });
-        }
+        };
     
         if(!cpf) {
             return res.status(400).send({
                 ok: false,
                 message: "CPF not provided"
             });
-        }
+        };
 
         if(!email) {
             return res.status(400).send({
                 ok: false,
                 message: "Email not provided"
             });
-        }
+        };
 
         if(!age) {
             return res.status(400).send({
                 ok: false,
                 message: "Age not provided"
             });
-        }
-
-        //CPF deve ser único por usuário
-        if(usersList.some(user => user.cpf === cpf)){
-            return res.status(400).send({
-                ok: false,
-                message: "CPF already registred on the system"
-            })
-        }
+        };
 
         //Criar uma instância da classe User
         const user = new User(name, cpf, email, age);
@@ -529,6 +522,5 @@ userRoutes.put("/:userId/transactions/:id", (req:Request, res: Response) => {
 
 //FALTA:
 
-//1. Fazer validação de CPF por middleware;
-//2. Fazer validação de todas as rotas de transactions por middleware;
-//3. Separar código em controllers
+//1. Fazer validação de todas as rotas de transactions por middleware;
+//2. Separar código em controllers
