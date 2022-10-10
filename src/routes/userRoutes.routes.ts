@@ -1,6 +1,7 @@
 import { Request, Response, Router } from "express";
 import { usersList } from "../data/usersList";
 import { cpfExistsMiddleware } from "../middlewares/cpf-exists.middleware";
+import { userExistsMiddleware } from "../middlewares/user-exists.middleware";
 import { Transaction } from "../models/transaction";
 import { User } from "../models/user";
 
@@ -250,8 +251,9 @@ userRoutes.put("/:id", (req: Request, res: Response) => {
     }
 });
 
+
 //Transactions
-userRoutes.post("/:userId/transactions", (req: Request, res: Response) => {
+userRoutes.post("/:userId/transactions", [userExistsMiddleware], (req: Request, res: Response) => {
     try {
         const { title, value, type } = req.body;
         const { userId } = req.params;
@@ -288,14 +290,7 @@ userRoutes.post("/:userId/transactions", (req: Request, res: Response) => {
 
         let userTransaction = usersList.find((item) => item.id === userId);
 
-        if(!userTransaction) {
-            return res.status(404).send({
-                ok: false,
-                message: "User not found"
-            })
-        };
-
-        userTransaction.transactions.push(transaction);
+        userTransaction?.transactions.push(transaction);
 
         return res.status(201).send({
             ok: true,
@@ -312,20 +307,13 @@ userRoutes.post("/:userId/transactions", (req: Request, res: Response) => {
     }
 });
 
-userRoutes.get("/:userId/transactions/:id", (req: Request, res: Response) => {
+userRoutes.get("/:userId/transactions/:id", [userExistsMiddleware], (req: Request, res: Response) => {
     try {
         const { userId, id } = req.params;
 
         let user = usersList.find((user) => user.id === userId);
 
-        if(!user) {
-            return res.status(404).send({
-                ok: false,
-                message: "User not found"
-            })
-        }
-
-        let transaction = user.transactions.find((transaction) => transaction.id === id);
+        let transaction = user?.transactions.find((transaction) => transaction.id === id);
 
         if(!transaction) {
             return res.status(404).send({
@@ -378,7 +366,7 @@ userRoutes.get("/:userId/transactions", (req: Request, res: Response) => {
 
         if(!title && !type) {
             return res.status(200).send({
-                transactions: [user.transactions],
+                transactions: [user?.transactions],
                 balance: {
                     incomes: somaIncomes,
                     outcomes: somaOutcomes,
@@ -433,7 +421,7 @@ userRoutes.delete("/:userId/transactions/:id", (req: Request, res: Response) => 
 
         let transactionIndex = user.transactions.findIndex((transaction) => transaction.id === id);
 
-        if(transactionIndex < 0){
+        if(transactionIndex < 0) {
             return res.status(404).send({
                 ok: false,
                 message: "Transaction not found"
@@ -457,21 +445,14 @@ userRoutes.delete("/:userId/transactions/:id", (req: Request, res: Response) => 
     }
 });
 
-userRoutes.put("/:userId/transactions/:id", (req:Request, res: Response) => {
+userRoutes.put("/:userId/transactions/:id", [userExistsMiddleware], (req:Request, res: Response) => {
     try {
         const { userId, id } = req.params;
         const { title, value, type } = req.body;
 
         let user = usersList.find((user) => user.id === userId);
 
-        if(!user) {
-            return res.status(404).send({
-                ok: false,
-                message: "User not found"
-            })
-        };
-
-        let transaction = user.transactions.find((transaction) => transaction.id === id);
+        let transaction = user?.transactions.find((transaction) => transaction.id === id);
 
         if(!transaction) {
             return res.status(404).send({
@@ -508,7 +489,7 @@ userRoutes.put("/:userId/transactions/:id", (req:Request, res: Response) => {
         return res.status(201).send({
             ok: true,
             message: "Transaction succesfully edited",
-            data: user.transactions
+            data: user?.transactions
         });
 
     } catch (error: any) {
@@ -519,8 +500,3 @@ userRoutes.put("/:userId/transactions/:id", (req:Request, res: Response) => {
         })
     }
 });
-
-//FALTA:
-
-//1. Fazer validação de todas as rotas de transactions por middleware;
-//2. Separar código em controllers
