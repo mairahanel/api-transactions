@@ -333,25 +333,18 @@ userRoutes.get("/:userId/transactions/:id", [userExistsMiddleware], (req: Reques
     }
 });
 
-userRoutes.get("/:userId/transactions", (req: Request, res: Response) => {
+userRoutes.get("/:userId/transactions", [userExistsMiddleware], (req: Request, res: Response) => {
     try {
         const { userId } = req.params;
         const { title, type } = req.query;
 
         let user = usersList.find((user) => user.id === userId);
 
-        if(!user) {
-            return res.status(404).send({
-                ok: false,
-                message: "User not found"
-            })
-        };
-
         let somaIncomes = 0;
         let somaOutcomes = 0;
 
-        for(let transaction of user.transactions) {
 
+        user?.transactions.forEach((transaction) => {
             if(transaction.type === "income") {
                 somaIncomes = somaIncomes + transaction.value;
             };
@@ -359,7 +352,7 @@ userRoutes.get("/:userId/transactions", (req: Request, res: Response) => {
             if(transaction.type === "outcome") {
                 somaOutcomes = somaOutcomes + transaction.value;
             };
-        };
+        })
 
         let totalCredito = somaIncomes - somaOutcomes;
 
@@ -375,8 +368,8 @@ userRoutes.get("/:userId/transactions", (req: Request, res: Response) => {
             });
         };
 
-        let transactionTitle = user.transactions.filter((transaction) => transaction.title === title);
-        let transactionType = user.transactions.filter((transaction) => transaction.type === type);
+        let transactionTitle = user?.transactions.filter((transaction) => transaction.title === title);
+        let transactionType = user?.transactions.filter((transaction) => transaction.type === type);
 
         if(!transactionTitle && !transactionType) {
             return res.status(404).send({
@@ -406,17 +399,14 @@ userRoutes.get("/:userId/transactions", (req: Request, res: Response) => {
     }
 });
 
-userRoutes.delete("/:userId/transactions/:id", (req: Request, res: Response) => {
+userRoutes.delete("/:userId/transactions/:id", [userExistsMiddleware], (req: Request, res: Response) => {
     try {
         const { userId, id } = req.params;
 
         let user = usersList.find((user) => user.id === userId);
 
         if(!user) {
-            return res.status(404).send({
-                ok: false,
-                message: "User not found"
-            })
+            return undefined
         };
 
         let transactionIndex = user.transactions.findIndex((transaction) => transaction.id === id);
